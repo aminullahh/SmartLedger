@@ -78,7 +78,7 @@ function App() {
         }}
       >
         <h2 style={{ color: "var(--primary-purple)" }}>
-          Loading Amiinullah Store...
+          Loading Amtech Smart Ledger...
         </h2>
       </div>
     );
