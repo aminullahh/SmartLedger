@@ -16,18 +16,26 @@ function App() {
   const [transactions, setTransactions] = useState([]);
   const [loggedIn, setLoggedIn] = useState(false);
 
-  // 1. Setup Auth Listener (Hook must be at the top)
+  // 1. NEW: Add a loading state
+  const [loading, setLoading] = useState(true);
+
+  // 2. Setup Auth Listener
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, (user) => {
-      if (user) setLoggedIn(true);
-      else setLoggedIn(false);
+      if (user) {
+        setLoggedIn(true);
+      } else {
+        setLoggedIn(false);
+      }
+      // Tell the app we are done checking Firebase
+      setLoading(false);
     });
     return () => unsubAuth();
   }, []);
 
-  // 2. Setup Data Listeners (Hook must be at the top)
+  // 3. Setup Data Listeners
   useEffect(() => {
-    if (!loggedIn) return; // Silent guard inside the hook is fine
+    if (!loggedIn) return;
 
     const unsubProducts = onSnapshot(collection(db, "products"), (snapshot) => {
       setProducts(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
@@ -48,12 +56,30 @@ function App() {
     };
   }, [loggedIn]);
 
-  // 3. Early Return for Login (This MUST come after all Hooks)
-  if (!loggedIn) {
-    return <Login setLoggedIn={setLoggedIn} />;
+  // 4. NEW: Early Return for Loading Screen
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <h2 style={{ color: "var(--primary-purple)" }}>
+          Loading Amiinullah Store...
+        </h2>
+      </div>
+    );
   }
 
-  // 4. Main Application Render
+  // 5. Early Return for Login
+  if (!loggedIn) {
+    return <Login />;
+  }
+
+  // 6. Main Application Render
   return (
     <div className="container">
       <header className="card">
