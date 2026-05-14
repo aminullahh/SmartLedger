@@ -1,9 +1,10 @@
 import React, { useState } from "react";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../services/firebaseConfig";
 
-const TransactionHistory = ({ transactions }) => {
+const TransactionHistory = ({ transactions, products }) => {
   const [filter, setFilter] = useState("all");
 
-  // Helper to safely format Firestore dates
   const formatDate = (timestamp) => {
     if (!timestamp) return "Just now";
     const date = timestamp.toDate();
@@ -14,13 +15,10 @@ const TransactionHistory = ({ transactions }) => {
     );
   };
 
-  // Filter Logic
   const filteredTransactions = transactions
     .filter((t) => {
       if (filter === "all") return true;
-
-      if (!t.date) return true; // Include pending transactions
-
+      if (!t.date) return true;
       const tDate = t.date.toDate();
       const now = new Date();
       const diffTime = Math.abs(now - tDate);
@@ -33,9 +31,7 @@ const TransactionHistory = ({ transactions }) => {
           tDate.getFullYear() === now.getFullYear()
         );
       }
-      if (filter === "week") {
-        return diffDays <= 7;
-      }
+      if (filter === "week") return diffDays <= 7;
       if (filter === "month") {
         return (
           tDate.getMonth() === now.getMonth() &&
@@ -45,11 +41,41 @@ const TransactionHistory = ({ transactions }) => {
       return true;
     })
     .sort((a, b) => {
-      // Sort newest to oldest
       const dateA = a.date ? a.date.toMillis() : Date.now();
       const dateB = b.date ? b.date.toMillis() : Date.now();
       return dateB - dateA;
     });
+
+  const handleVoidTransaction = async (t) => {
+    const confirmVoid = window.confirm(
+      `Void this ${t.type}? This will restore the stock and update the dashboard.`,
+    );
+
+    if (!confirmVoid) return;
+
+    try {
+      //This Mark the transaction as voided
+      const transactionRef = doc(db, "transactions", t.id);
+      await updateDoc(transactionRef, { isVoided: true });
+
+      //This Find the product and restore the stock
+      const product = products.find((p) => p.id === t.productId);
+      if (product) {
+        const productRef = doc(db, "products", t.productId);
+
+        //This Logic Handle: If we void a SALE, we ADD items back. If we void a RESTOCK, we SUBTRACT them.
+        const stockAdjustment =
+          t.type === "sale" ? Number(t.amount) : -Number(t.amount);
+
+        await updateDoc(productRef, {
+          quantity: Number(product.quantity) + stockAdjustment,
+        });
+      }
+    } catch (error) {
+      console.error("Error voiding: ", error);
+      alert("Failed to update record.");
+    }
+  };
 
   return (
     <div className="card history-card">
@@ -74,7 +100,15 @@ const TransactionHistory = ({ transactions }) => {
           </p>
         ) : (
           filteredTransactions.map((t) => (
-            <div key={t.id} className={`history-item ${t.type}`}>
+            <div
+              key={t.id}
+              className={`history-item ${t.type}`}
+              style={{
+                opacity: t.isVoided ? 0.5 : 1,
+                textDecoration: t.isVoided ? "line-through" : "none",
+                position: "relative",
+              }}
+            >
               <div className="history-info">
                 <strong>{t.productName}</strong>
                 <span className="history-date">{formatDate(t.date)}</span>
@@ -83,10 +117,43 @@ const TransactionHistory = ({ transactions }) => {
                 <span className="history-action">
                   {t.type === "sale" ? "Sold" : "Bought"} {t.amount}
                 </span>
-                <span className={`history-cash ${t.type}`}>
-                  {t.type === "sale" ? "+" : "-"}₦
-                  {Number(t.totalCash).toLocaleString()}
-                </span>
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "10px" }}
+                >
+                  <span className={`history-cash ${t.type}`}>
+                    {t.type === "sale" ? "+" : "-"}₦
+                    {Number(t.totalCash).toLocaleString()}
+                  </span>
+
+                  {!t.isVoided && (
+                    <button
+                      onClick={() => handleVoidTransaction(t)}
+                      style={{
+                        background: "#ff4d4f",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "4px",
+                        padding: "2px 8px",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                      }}
+                    >
+                      Delete
+                    </button>
+                  )}
+                  {t.isVoided && (
+                    <span
+                      style={{
+                        fontSize: "10px",
+                        color: "red",
+                        fontWeight: "bold",
+                        textDecoration: "none",
+                      }}
+                    >
+                      VOIDED
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           ))

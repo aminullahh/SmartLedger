@@ -1,22 +1,25 @@
 import React from "react";
 
 const Dashboard = ({ products, transactions }) => {
-  // 1. Calculate Total Income (Sum of all sales)
-  const totalIncome = transactions
+  //This Filter out voided transactions so they don't affect the math
+  const validTransactions = transactions.filter((t) => !t.isVoided);
+
+  //This Calculate Total Income (Using only valid sales)
+  const totalIncome = validTransactions
     .filter((t) => t.type === "sale")
     .reduce((acc, t) => acc + (Number(t.totalCash) || 0), 0);
 
-  // 2. Calculate Total Expenses (Sum of all restocks/purchases)
-  const totalExpenses = transactions
+  //This Calculate Total Expenses (Using only valid restocks)
+  const totalExpenses = validTransactions
     .filter((t) => t.type === "restock")
     .reduce((acc, t) => acc + (Number(t.totalCash) || 0), 0);
 
-  // 3. Calculate Current Stock Value (Inventory money sitting on shelves)
+  //This Calculate Current Stock Value
   const stockValue = products.reduce((acc, p) => {
     return acc + (Number(p.quantity) || 0) * (Number(p.costPrice) || 0);
   }, 0);
 
-  // 4. Net Profit
+  // This Calculate Net Profit
   const profit = totalIncome - totalExpenses;
 
   return (

@@ -18,31 +18,31 @@ const AddProduct = ({ products }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 1. Prepare clean numeric data to prevent NaN
+    //This Prepare clean numeric data to prevent NaN
     const qtyNum = Number(quantity) || 0;
     const costNum = Number(costPrice) || 0;
     const sellNum = Number(sellingPrice) || 0;
     const totalCost = qtyNum * costNum;
 
-    // 2. Check if product already exists in your local state
+    // This Check if product already exists in your local state
     const existingProduct = products.find(
       (p) => p.name.toLowerCase() === name.toLowerCase(),
     );
 
     try {
       if (existingProduct) {
-        // --- UPDATE MODE ---
+        // This Handle UPDATE MODE
         const productRef = doc(db, "products", existingProduct.id);
         await updateDoc(productRef, {
-          // Adds new quantity to the existing stock number
+          // This Adds new quantity to the existing stock number
           quantity: (Number(existingProduct.quantity) || 0) + qtyNum,
-          // Updates prices to the most recent values
+          // This Updates prices to the most recent values
           costPrice: costNum,
           sellingPrice: sellNum,
           lastUpdated: serverTimestamp(),
         });
       } else {
-        // --- CREATE MODE ---
+        // This Handle CREATE MODE
         await addDoc(collection(db, "products"), {
           name,
           category,
@@ -53,7 +53,7 @@ const AddProduct = ({ products }) => {
         });
       }
 
-      // 3. Record the transaction for the "Total Expenses" card
+      // This Record the transaction for the "Total Expenses" card
       await addDoc(collection(db, "transactions"), {
         productName: name,
         type: "restock",
@@ -62,7 +62,7 @@ const AddProduct = ({ products }) => {
         date: serverTimestamp(),
       });
 
-      // Clear Form fields
+      // This Clear Form fields
       setName("");
       setCategory("");
       setQuantity("");

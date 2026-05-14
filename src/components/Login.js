@@ -13,7 +13,7 @@ const Login = () => {
 
   const handleAuth = async (e) => {
     e.preventDefault();
-    setError(null); // Clear previous errors
+    setError(null); //This Clear previous errors
 
     try {
       if (isRegistering) {
@@ -22,7 +22,7 @@ const Login = () => {
         await signInWithEmailAndPassword(auth, email, password);
       }
     } catch (err) {
-      // Clean up Firebase error messages for the user
+      //This Clean up Firebase error messages for the user
       setError(err.message.replace("Firebase: ", ""));
     }
   };

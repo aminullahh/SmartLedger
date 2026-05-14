@@ -122,7 +122,7 @@ select {
   transform: translateY(0);
 }
 
-/* Fix the "New user?" link appearance */
+/* New user? link appearance */
 .login-toggle-text {
   cursor: pointer;
   text-align: center;
@@ -308,6 +308,18 @@ header h1 {
 }
 .history-cash.restock {
   color: var(--danger-red);
+}
+
+/* In your main.css */
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 30px; /* This adds space between the forms and the inventory */
+  margin-top: 20px;
+}
+
+.inventory-list {
+  margin-top: 40px; /* Extra protection to keep it away from the buttons */
 }
 
 /* MOBILE RESPONSIVENESS */

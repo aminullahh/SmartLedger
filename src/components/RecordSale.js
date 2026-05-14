@@ -26,11 +26,11 @@ const RecordSale = ({ products }) => {
     }
 
     try {
-      // 1. Update the Product Stock (Deduction)
+      // This Update the Product Stock (Deduction)
       const productRef = doc(db, "products", selectedId);
       await updateDoc(productRef, { quantity: newStock });
 
-      // 2. Record Transaction (Income)
+      // This Record Transaction (Income)
       await addDoc(collection(db, "transactions"), {
         productName: product.name,
         type: "sale",

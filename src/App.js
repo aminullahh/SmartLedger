@@ -12,14 +12,15 @@ import TransactionHistory from "./components/TransactionHistory";
 import Login from "./components/Login";
 
 function App() {
+  const shopName = process.env.REACT_APP_SHOP_NAME || "Amtech Smart Ledger";
   const [products, setProducts] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [loggedIn, setLoggedIn] = useState(false);
 
-  // 1. NEW: Add a loading state
+  // This Add a loading state
   const [loading, setLoading] = useState(true);
 
-  // 2. Setup Auth Listener
+  // This Handle Setup Auth Listener
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -27,13 +28,13 @@ function App() {
       } else {
         setLoggedIn(false);
       }
-      // Tell the app we are done checking Firebase
+      // This Tell the app we are done checking Firebase
       setLoading(false);
     });
     return () => unsubAuth();
   }, []);
 
-  // 3. Setup Data Listeners
+  // This Handle Setup Data Listeners
   useEffect(() => {
     if (!loggedIn) return;
 
@@ -56,7 +57,16 @@ function App() {
     };
   }, [loggedIn]);
 
-  // 4. NEW: Early Return for Loading Screen
+  useEffect(() => {
+    const link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+      const newLink = document.createElement("link");
+      newLink.rel = "icon";
+      document.getElementsByTagName("head")[0].appendChild(newLink);
+    }
+  }, []);
+
+  // This handle Early Return for Loading Screen
   if (loading) {
     return (
       <div
@@ -74,16 +84,21 @@ function App() {
     );
   }
 
-  // 5. Early Return for Login
+  // This Handle Early Return for Login
   if (!loggedIn) {
     return <Login />;
   }
 
-  // 6. Main Application Render
+  //  This handle Main Application Render
   return (
     <div className="container">
       <header className="card">
-        <h1>Amiinullah Store</h1>
+        <div>
+          <h1 style={{ margin: 0 }}>{shopName}</h1>
+          <small style={{ color: "var(--primary-purple)", fontWeight: "bold" }}>
+            Powered by Amtech Digital Solution
+          </small>
+        </div>
         <button onClick={() => signOut(auth)} className="logout-btn">
           Logout
         </button>
@@ -98,7 +113,7 @@ function App() {
         </div>
 
         <InventoryList products={products} />
-        <TransactionHistory transactions={transactions} />
+        <TransactionHistory transactions={transactions} products={products} />
       </div>
     </div>
   );
